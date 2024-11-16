@@ -17,7 +17,7 @@ app.post("/signUp", async (req,res) => {
         res.status(404).send("error saving the user")
     }
         
-})  
+})      
 
 app.get("/feed", async(req,res) => {
 
@@ -62,10 +62,10 @@ app.patch("/update", async (req,res) => {
     const data = req.body;
 
     try {
-        await User.findByIdAndUpdate(userId,data)
+        await User.findByIdAndUpdate(userId,data,{runValidators:true})
         res.send("user updated successfully");
     } catch (error) {
-        res.status(404).send("user not found");
+        res.status(404).send("Update failed: " + error.message);
     }
 })
 
