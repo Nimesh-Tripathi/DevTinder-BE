@@ -1,9 +1,11 @@
 const express = require("express")
 const { userAuth } = require("../middlewares/auth")
 const profileRouter = express.Router();
+const { ValidateEditProfileData, ValidateStrongPassword } = require("../utils/validation")
+const bcrypt = require("bcrypt")
 
 
-profileRouter.get("/profile",userAuth, async (req, res) => {
+profileRouter.get("/profile/view", userAuth, async (req, res) => {
 
     try {
         const user = req.user;
@@ -11,31 +13,74 @@ profileRouter.get("/profile",userAuth, async (req, res) => {
         res.send(user);
     }
     catch (error) {
-        res.status(404).send("Error: "+error.message)
+        res.status(404).send("Error: " + error.message)
     }
 })
 
-profileRouter.patch("/update", async (req, res) => {
-    const userId = req.body.id;
-    const data = req.body;
+profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
 
     try {
-
-        const ALLOWED_UPDATES = ["photoUrl", "about", "skills", "gender", "age", "id"];
-
-        const isAllow = Object.keys(data).every(k => ALLOWED_UPDATES.includes(k));
-
-        if (!isAllow) {
-            throw new Error("update not allowed");
+        if (!ValidateEditProfileData(req)) {
+            throw new Error("Please enter valid field")
         }
 
-        await User.findByIdAndUpdate(userId, data, { runValidators: true })
-        res.send("user updated successfully");
+        const loggedInUser = req.user;
+
+        // console.log(loggedInUser);
+
+        Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key]));
+
+        await loggedInUser.save();
+
+        res.json({
+            messgae: `${loggedInUser.firstName}, your profile updated successfuly`,
+            data: loggedInUser,
+        })
+
     } catch (error) {
         res.status(404).send("Update failed: " + error.message);
     }
 })
 
+profileRouter.patch("/profile/password", userAuth, async (req, res) => {
+    try {
 
+        const user = req.user;
+
+        const userPass = user.password;
+
+        const exsistPass = req.body.exsist;
+
+        // console.log(exsistPass);
+
+        const isCorrect = await bcrypt.compare(exsistPass, userPass);
+
+        if (!isCorrect) {
+            throw new Error("Existing password is not correct");
+        }
+
+        const newPass = req.body.new;
+
+        if (!ValidateStrongPassword(newPass)) {
+            res.send("Password is not strong");
+        }
+
+        const newPassHash = await bcrypt.hash(newPass, 10);
+
+        user.password = newPassHash;
+
+        await user.save();
+
+        res.json({
+            messgae: `${user.firstName}, your password updated successfuly`,
+            data: user,
+        })
+
+    }
+    catch(error){
+        res.status(404).send("Error: "+ error.message)
+    }
+
+})
 
 module.exports = profileRouter

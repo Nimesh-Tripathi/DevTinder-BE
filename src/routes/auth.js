@@ -63,16 +63,11 @@ authRouter.post("/logIn", async (req, res) => {
     }
 })
 
-authRouter.delete("/delete", async (req, res) => {
-
-    const userId = req.body.id;
-
-    try {
-        await User.findByIdAndDelete(userId);
-        res.send("user deleted successfully")
-    } catch (error) {
-        res.status(404).send("user not found");
-    }
+authRouter.post("/logOut", async (req, res) => {
+ 
+    res.clearCookie('token');
+    res.send("Logout Successful !!")
+    
 })
 
 module.exports = authRouter
