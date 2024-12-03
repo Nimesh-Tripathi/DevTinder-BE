@@ -1,31 +1,70 @@
-const express = require("express")
+const express = require("express");
+const { userAuth } = require("../middlewares/auth");
+const ConnectionRequestModel = require("../models/connectionRequest");
+const userRouter = express.Router();
 
-const authRouter = express.Router();
 
-authRouter.get("/feed", async (req, res) => {
-
-    const userEmail = req.body.emailId;
-
+userRouter.get("/user/requests/received",userAuth,async(req,res) => {
     try {
-        const all = await User.find({ emailId: userEmail });
-        // const all =  await User.find({});
-        res.send(all)
+    
+        const user = req.user;
+
+        const connectionRequest = await ConnectionRequestModel.find({toUserId : user._id, }).populate("fromUserId",["firstName","lastName"]);
+
+        res.json({message:"Data fetched successfully",data:connectionRequest})
+
     } catch (error) {
-        res.status(404).send("error fetching all users")
-    }
-})
-
-authRouter.get("/find", async (req, res) => {
-
-    const userID = req.body.id;
-
-    try {
-        const ans = await User.findById(userID);
-        res.send(ans)
-    } catch (error) {
-        res.status(404).send("user not found");
+        res.status(404).send("Error: "+ error.message)
     }
 })
 
 
-module.exports = authRouter
+userRouter.get("/user/connections", userAuth, async(req,res) => {
+
+    try {
+
+        const user = req.user;
+
+        const connectionRequest = await ConnectionRequestModel.find({
+            $or : [
+                { toUserId : user._id, status : "accepted" },
+                {fromUserId : user._id, status : "accepted"},    
+            ],
+         }).populate("fromUserId",["firstName","lastName"]);
+
+        res.json({data:connectionRequest})
+          
+    } catch (error) {
+        res.status(404).send("Error: "+ error.message)
+    }
+})
+
+ 
+
+// authRouter.get("/feed", async (req, res) => {
+
+//     const userEmail = req.body.emailId;
+
+//     try {
+//         const all = await User.find({ emailId: userEmail });
+//         // const all =  await User.find({});
+//         res.send(all)
+//     } catch (error) {
+//         res.status(404).send("error fetching all users")
+//     }
+// })
+
+// authRouter.get("/find", async (req, res) => {
+
+//     const userID = req.body.id;
+
+//     try {
+//         const ans = await User.findById(userID);
+//         res.send(ans)
+//     } catch (error) {
+//         res.status(404).send("user not found");
+//     }
+// })
+
+
+module.exports = userRouter
