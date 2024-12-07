@@ -48,12 +48,30 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 })
 
 
-userRouter.get("/find", async (req,res) => {
+userRouter.get("/feed",userAuth , async (req,res) => {
     try {
 
-        const data = await user.find({});
+        const loggedInUser = req.user;
 
-        res.send(data);
+        const connectionRequests = await ConnectionRequestModel.find({
+            $or: [{fromUserId : loggedInUser._id}, {toUserId : loggedInUser._id}]
+        })
+
+        const hideUsersFromFeed = new Set();
+
+        connectionRequests.forEach( (req) => {
+            hideUsersFromFeed.add(req.fromUserId.toString());
+            hideUsersFromFeed.add(req.toUserId.toString());
+        });
+
+        const users = await user.find({
+            $and : [
+                { _id : { $ne : loggedInUser._id } },
+                { _id : { $nin : Array.from(hideUsersFromFeed)}}
+            ]
+        }).select(["firstName", "lastName"])
+
+        res.send(users);
         
     } catch (error) {
         res.status(404).send("Error: " + error.message)
