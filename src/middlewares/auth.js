@@ -8,6 +8,10 @@ const userAuth = async (req, res, next) => {
 
         const { token } = cookies;
 
+        if(!token){
+            return res.status(401).send("Please Login!!")
+        }
+
         const message = await jwt.verify(token, "Nimesh");
 
         const { _id } = message;

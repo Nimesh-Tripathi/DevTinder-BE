@@ -13,7 +13,7 @@ authRouter.post("/signUp", async (req, res) => {
         //valiadtion
         ValidateSignUpData(req);
 
-        const { firstName, lastName, emailId, password } = req.body
+        const { firstName, lastName, emailId, password, photoUrl} = req.body
 
         //hashing the password
         const passwordHash = await bcrypt.hash(password, 10);
@@ -23,7 +23,8 @@ authRouter.post("/signUp", async (req, res) => {
             firstName,
             lastName,
             emailId,
-            password: passwordHash
+            password: passwordHash,
+            photoUrl,
         });
 
 
@@ -40,7 +41,7 @@ authRouter.post("/logIn", async (req, res) => {
     try {
         const user = await User.findOne({ emailId });
         if (!user) {
-            throw new Error("user not found");
+            res.status(401).send("user not found");
         }
 
         // const pass = await bcrypt.compare(password, user.password); 
@@ -60,7 +61,7 @@ authRouter.post("/logIn", async (req, res) => {
             res.status(404).send("invalid password");
         }
     } catch (error) {
-        res.send(error.message);
+        // res.send(error.message);
     }
 })
 

@@ -45,10 +45,10 @@ const userSchema =  new mongoose.Schema({
                 throw new Error("Invalid gender");
             }   
         }
-    },
+    },  
     photoUrl : {
         type : String,
-        // default : "c:\Users\Hp\OneDrive\Desktop\dummy pic.png",
+        default : "https://www.aquasafemine.com/wp-content/uploads/2018/06/dummy-man-570x570-300x300.png",
         validate(value){
             if(!validator.isURL(value)){
                 throw new Error("URL is not correct")

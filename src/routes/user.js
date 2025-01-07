@@ -4,6 +4,7 @@ const ConnectionRequestModel = require("../models/connectionRequest");
 const user = require("../models/user");
 const userRouter = express.Router();
 
+const USER_SAFE_DATA = "firstName lastName photoUrl age gender about skills";
 
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     try {
@@ -31,7 +32,7 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
                 { toUserId: user._id, status: "accepted" },
                 { fromUserId: user._id, status: "accepted" },
             ],
-        }).populate("fromUserId", ["firstName", "lastName"]).populate("toUserId", ["firstName", "lastName"]);
+        }).populate("fromUserId", USER_SAFE_DATA).populate("toUserId", USER_SAFE_DATA);
 
         const data = connectionRequest.map((row) => {
             if(row.fromUserId._id.toString() === user._id.toString()){
@@ -74,7 +75,7 @@ userRouter.get("/feed",userAuth , async (req,res) => {
                 { _id : { $ne : loggedInUser._id } },
                 { _id : { $nin : Array.from(hideUsersFromFeed)}}
             ]
-        }).select(["firstName", "lastName"])
+        }).select(USER_SAFE_DATA)
 
         res.send(users);
         
